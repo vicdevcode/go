@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>*{box-sizing:border-box;padding:0;margin:0}.done{color:green}.todo_title{text-align:center;padding-top:32px}.todo_form{display:flex;flex-direction:column}.todo_add{display:flex;margin-top:32px;margin-bottom:12px}.todo_add input{flex:1;padding-left:8px}.todo_add button{padding:4px}.not_found{width:100%;display:flex;justify-content:center;padding-top:4px;padding-bottom:8px}.container{max-width:640px;margin:0 auto}.todo_task,.todo_task_done{padding:8px}</style>
+        <title>TODO</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="todo_title">Список задач</h1>
+            <form class="todo_form" autocomplete="off">
+                <div class="todo_add">
+                    <input id="todo" type="text" />
+                    <button type="button" onclick="add()">Добавить</button>
+                </div>
+                <fieldset id="todo_tasks">
+                    <legend>Задачи</legend>
+                    {{range .Todos}}
+                    {{if not .Done}}
+                    <div class="todo_task">
+                        <input type="checkbox" id="{{ .Id }}" onchange="change({{.Id}})" />
+                        <label for="{{ .Id }}">{{ .Title }}</label>
+                    </div>
+                    {{end}}
+                    {{end}}
+                </fieldset>
+                <fieldset id="todo_done">
+                    <legend>Выполнено</legend>
+                    {{range .Todos}}
+                    {{if .Done}}
+                    <div class="todo_task_done">
+                        <input type="checkbox" id="{{ .Id }}" onchange="change({{.Id}})" checked />
+                        <label for="{{ .Id }}">{{ .Title }}</label>
+                    </div>
+                    {{end}}
+                    {{end}}
+                </fieldset>
+            </form>
+        </div>
+
+        <script>
+            let requestStart = false
+
+            const tasks = document.getElementById("todo_tasks")
+            if (tasks.querySelectorAll('div').length === 0) {
+                const noTasksMessage = document.createElement('span');
+                noTasksMessage.classList.add("not_found")
+                noTasksMessage.textContent = 'Задач нет, отдыхаем';
+                tasks.appendChild(noTasksMessage);
+            }
+            const dones = document.getElementById("todo_done")
+            if (dones.querySelectorAll('div').length === 0) {
+                const noTasksMessage = document.createElement('span');
+                noTasksMessage.classList.add("not_found")
+                noTasksMessage.textContent = 'Ничего не выполнено';
+                dones.appendChild(noTasksMessage);
+            }
+
+            async function add() {
+                if (!requestStart) requestStart = true
+                else return
+                const input = document.getElementById("todo")
+                console.log(input.value)
+                const res = await fetch("http://localhost:8000/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ title: input.value })
+                }).then((response) => {
+                    if (response.status === 200) {
+                        window.location.reload()
+                    } else {
+                        alert("ERROR")
+                    }
+                })
+            }
+
+            async function change(t) {
+                if (!requestStart) requestStart = true
+                else return
+                const checkbox = document.getElementById(t)
+                const res = await fetch("http://localhost:8000/update", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ id: t })
+                }).then((response) => {
+                    if (response.status === 200) {
+                        window.location.reload()
+                    } else {
+                        alert("ERROR")
+                    }
+                })
+            }
+        </script>
+    </body>
+</html>
